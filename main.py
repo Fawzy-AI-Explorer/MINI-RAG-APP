@@ -1,6 +1,6 @@
-from fastapi import FastAPI
+# from fastapi import FastAPI
 
-app = FastAPI()
+# app = FastAPI()
 
 # ============================== Swagger ==============================
 # http://127.0.0.1:8000/docs || to see the API documentation (FastAPI auto-generates)
@@ -27,12 +27,30 @@ app = FastAPI()
 # from the 3 dots on the right side of the collection, add a new request
 # set the URL to {{any_name}}/welcome  || click send
 
-@app.get("/welcome") # decorator to define a route when put /welcome after the base URL call this function
-# API routes (GET, POST, PUT, DELETE...)
-def welocome():
-    return{
-    "message": "Welcome to the FastAPI application!"
-    }
+# @app.get("/welcome") # decorator to define a route when put /welcome after the base URL call this function
+# # API routes (GET, POST, PUT, DELETE...)
+# def welocome():
+#     return{
+#     "message": "Welcome to the FastAPI application!"
+#     }
+
+
+
+
+from fastapi import FastAPI
+from dotenv import load_dotenv
+load_dotenv(".env") # this loading should ba done befor importing any other modules that use environment variables
+from routes.base import base_router
+
+app = FastAPI()
+
+
+app.include_router(base_router)
+
+
+
+
+
 
 
 # uvicorn main:app --reload --port 5000
