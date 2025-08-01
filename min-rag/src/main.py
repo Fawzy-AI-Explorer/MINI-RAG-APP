@@ -53,7 +53,7 @@ app.include_router(base_router)
 
 
 
-# uvicorn main:app --reload --port 5000
+# uvicorn main:app --reload
 
 # reload to see changes without restarting the server
 # host to make it accessible from any IP address
