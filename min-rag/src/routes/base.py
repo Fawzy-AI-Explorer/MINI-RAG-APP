@@ -14,5 +14,6 @@ async def welocome():
     "message": "Welcome to the FastAPI application!{app_name} - {app_version}".format(app_name=app_name, app_version=app_version)
     }
 
-
-
+@base_router.get("/welcome") 
+async def welocome():
+    return{"message": "Welcome to the FastAPI application!"}
