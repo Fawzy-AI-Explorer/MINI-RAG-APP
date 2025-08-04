@@ -31,23 +31,36 @@
 # # API routes (GET, POST, PUT, DELETE...)
 # def welocome():
 #     return{
-#     "message": "Welcome to the FastAPI application!"
+#     "message": "Wel ome to the FastAPI application!"
 #     }
 
 
 
 
+# from dotenv import load_dotenv
+# load_dotenv(".env") # this loading should ba done befor importing any other modules that use environment variables
+
+# from src.routes.base import base_router
+# from src.routes import base
+
+
+# import sys
+# import os
+# sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
+
 from fastapi import FastAPI
-from dotenv import load_dotenv
-load_dotenv(".env") # this loading should ba done befor importing any other modules that use environment variables
-from routes.base import base_router
+from src.routes.base import base_router
+from src.routes.data import data_router
 
 app = FastAPI()
 
-
+app.include_router(data_router)
 app.include_router(base_router)
 
 
+print("✅ Routes:")
+for route in app.routes:
+    print(route.path, route.name)
 
 
 
