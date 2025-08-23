@@ -12,7 +12,7 @@ class DataController(BaseController):
         self.size_scale =  1024 * 1024  # Convert MB to bytes
 
     def validate_uploaded_file(self, file: UploadFile):
-        if file.content_type not in self.app_settings.FILE_ALLOWED_TYPES:
+        if file.content_type not in self.app_settings.FILE_ALLOWED_TYPES:  # self.app_settings.FILE_ALLOWED_TYPES => Inherited from BaseController
             return False, ResponseSignal.FILE_TYPE_NOT_SUPPORTED.value
         
         if file.size > self.app_settings.FILE_MAX_SIZE * self.size_scale:
@@ -31,7 +31,7 @@ class DataController(BaseController):
         while os.path.exists(new_file_path):
             random_key = self.generate_random_string()
             new_file_path = os.path.join(project_path, f"{random_key}_{cleaned_file_name}")
-        
+
         return new_file_path, f"{random_key}_{cleaned_file_name}"
 
     def get_clean_file_name(self, original_filename: str):
@@ -42,10 +42,10 @@ class DataController(BaseController):
 
         return cleaned_file_name
 
-         
+  
 
         pass
-        
+
 
 if __name__ == "__main__":
     print("DataController initialized with app settings:")
