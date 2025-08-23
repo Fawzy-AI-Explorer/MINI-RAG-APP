@@ -4,6 +4,8 @@ import os
 from src.helpers.config import get_settings, Settings
 from src.controllers.DataController import DataController
 from src.controllers.ProjectController import ProjectController
+from src.controllers.ProcesController import ProcessController
+
 import aiofiles
 from src.models.enums.ResponseEnums import ResponseSignal
 import logging
@@ -38,7 +40,7 @@ async def upload_data(project_id: str,
                 } 
         )
 
-    project_dir_path = ProjectController().get_project_path(project_id=project_id)
+    # project_dir_path = ProjectController().get_project_path(project_id=project_id)
     file_path, file_id = data_controller.generate_unique_file_path(
         original_filename=file.filename,
         project_id=project_id
@@ -74,18 +76,32 @@ async def upload_data(project_id: str,
         }
     )
 
-
-
-
 @data_router.post("/process/{project_id}")
 async def process_endpoint(project_id: str, process_request: ProcessRequest):
-    
+
     file_id = process_request.file_id
-    return file_id
-
-
-
+    chunk_size = process_request.chunk_size
+    overlap_size = process_request.overlap_size
+    do_reset = process_request.do_reset
     
-    
+        # You can add validation for chunk_size and overlap_size if needed
+    process_controller = ProcessController(project_id=project_id)
+    file_content = process_controller.get_file_content(file_id=file_id)
+    file_chunks = process_controller.process_file_content(
+        file_content=file_content,
+        file_id=file_id,
+        chunk_size=chunk_size,
+        overlap_size=overlap_size
+    )
+
+    if file_chunks is None or len(file_chunks) == 0:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                "Signal": ResponseSignal.FILE_PROCESSING_FAILED.value
+                } 
+        )
+
+    return file_chunks
 
 # to run python -m routes.data
