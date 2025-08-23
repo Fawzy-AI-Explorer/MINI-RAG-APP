@@ -7,13 +7,13 @@ from src.controllers.ProjectController import ProjectController
 import aiofiles
 from src.models.enums.ResponseEnums import ResponseSignal
 import logging
+from src.routes.schemas.data import ProcessRequest
 
-
-print("🚀 data.py loaded")
+print(" data.py loaded")
 
 logger = logging.getLogger("uvicorn.error")
 data_router = APIRouter(
-    prefix="/api/v1/data",  # Base path for all routes in this router  || before the decorator put /api/v1
+    prefix="/api/v1/data",      # Base path for all routes in this router  || before the decorator put /api/v1
     tags=["api_v1", "data"],    # Tags for grouping in Swagger UI
 )
 
@@ -21,10 +21,9 @@ data_router = APIRouter(
 async def welcome_data():
     return "welcome data"
 
-@data_router.get("/upload/{project_id}")
-# async def upload_data(project_id: str, ):
-#     return 555
-async def upload_data(project_id: str, file: UploadFile = None, 
+@data_router.post("/upload/{project_id}")
+async def upload_data(project_id: str, 
+                      file: UploadFile = None, 
                       app_settings: Settings = Depends(get_settings)):
     
     data_controller = DataController()
@@ -33,7 +32,7 @@ async def upload_data(project_id: str, file: UploadFile = None,
 
     if not is_valid:
         return JSONResponse(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_400_BAD_REQUEST, # if not success return 400 else 200
             content={
                 "Signal": result_signal
                 } 
@@ -46,10 +45,16 @@ async def upload_data(project_id: str, file: UploadFile = None,
     )
 
     try:
+        print("Uploading file to:", file_path)
 
+        # it is not efficient to read the whole file at once (save it in temporary), especially for large files and many users.
+        # Instead, read and write the file in chunks.
         async with aiofiles.open(file_path, "wb") as f:
+            print("file opened")
             while chunk := await file.read(app_settings.FILE_DEFAULT_CHUNK_SIZE):
+                print("writing chunk")
                 await f.write(chunk)
+        print("File upload completed.")
     except Exception as e:
         logger.error(f"Error while Uploading file: {e}")
         return JSONResponse(
@@ -61,16 +66,24 @@ async def upload_data(project_id: str, file: UploadFile = None,
 
     
     return JSONResponse(
+        # status_code=status.HTTP_200_OK, # status code 200 by default
         content={
             "Signal": ResponseSignal.FILE_UPLOADED_SUCCESSFULLY.value,
-            "file_path": file_path, 
+            # "file_path": file_path, 
             "file_id": file_id
         }
     )
-    
 
-    # return {"valid?" : is_valid, 
-    #         "Signal": result_signal}
+
+
+
+@data_router.post("/process/{project_id}")
+async def process_endpoint(project_id: str, process_request: ProcessRequest):
+    
+    file_id = process_request.file_id
+    return file_id
+
+
 
     
     
