@@ -30,8 +30,8 @@ class BaseController:
 
 if __name__ == "__main__":
     print("BaseController initialized with app settings:")
-    controller = BaseController()
-    print(controller.get_app_settings())
+    # controller = BaseController()
+    # print(controller.get_app_settings())
 
 #  cd min-rag/src/
 # to run python -m controllers.BaseController
