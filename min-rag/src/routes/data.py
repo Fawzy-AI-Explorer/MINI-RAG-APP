@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, Depends, UploadFile, status
+from fastapi import FastAPI, APIRouter, Depends, UploadFile, status, Request
 from fastapi.responses import JSONResponse
 import os
 from src.helpers.config import get_settings, Settings
@@ -6,12 +6,16 @@ from src.controllers.DataController import DataController
 from src.controllers.ProjectController import ProjectController
 from src.controllers.ProcesController import ProcessController
 
+from src.models.db_schemes.data_chunk import DataChunk
+
 import aiofiles
 from src.models.enums.ResponseEnums import ResponseSignal
 import logging
 from src.routes.schemas.data import ProcessRequest
 
-print(" data.py loaded")
+from src.models.ProjectModel import ProjectModel
+from src.models.ChunckModel import ChunckModel
+
 
 logger = logging.getLogger("uvicorn.error")
 data_router = APIRouter(
@@ -24,10 +28,15 @@ async def welcome_data():
     return "welcome data"
 
 @data_router.post("/upload/{project_id}")
-async def upload_data(project_id: str, 
+async def upload_data(request: Request, project_id: str, 
                       file: UploadFile = None, 
                       app_settings: Settings = Depends(get_settings)):
     
+    project_model = ProjectModel(db_client=request.app.db_client)
+    project = await project_model.get_project_or_create_one(project_id=project_id)
+
+
+
     data_controller = DataController()
     # Validate file type and size
     is_valid, result_signal = data_controller.validate_uploaded_file(file=file)
@@ -47,16 +56,11 @@ async def upload_data(project_id: str,
     )
 
     try:
-        print("Uploading file to:", file_path)
-
         # it is not efficient to read the whole file at once (save it in temporary), especially for large files and many users.
         # Instead, read and write the file in chunks.
         async with aiofiles.open(file_path, "wb") as f:
-            print("file opened")
             while chunk := await file.read(app_settings.FILE_DEFAULT_CHUNK_SIZE):
-                print("writing chunk")
                 await f.write(chunk)
-        print("File upload completed.")
     except Exception as e:
         logger.error(f"Error while Uploading file: {e}")
         return JSONResponse(
@@ -71,19 +75,22 @@ async def upload_data(project_id: str,
         # status_code=status.HTTP_200_OK, # status code 200 by default
         content={
             "Signal": ResponseSignal.FILE_UPLOADED_SUCCESSFULLY.value,
-            # "file_path": file_path, 
             "file_id": file_id
         }
     )
 
 @data_router.post("/process/{project_id}")
-async def process_endpoint(project_id: str, process_request: ProcessRequest):
+async def process_endpoint(request: Request, project_id: str, process_request: ProcessRequest):
 
     file_id = process_request.file_id
     chunk_size = process_request.chunk_size
     overlap_size = process_request.overlap_size
     do_reset = process_request.do_reset
-    
+
+
+    project_model = ProjectModel(db_client=request.app.db_client)
+    project = await project_model.get_project_or_create_one(project_id=project_id)
+
         # You can add validation for chunk_size and overlap_size if needed
     process_controller = ProcessController(project_id=project_id)
     file_content = process_controller.get_file_content(file_id=file_id)
@@ -101,7 +108,31 @@ async def process_endpoint(project_id: str, process_request: ProcessRequest):
                 "Signal": ResponseSignal.FILE_PROCESSING_FAILED.value
                 } 
         )
+    
+    file_chunks_records = [
+        DataChunk(
+            chunck_text=chunk.page_content,
+            chunck_matadata=chunk.metadata,
+            chunck_order= i+1,
+            chunck_projec_id= project.id
+        )
+        for i, chunk in enumerate(file_chunks)
+    ]
 
-    return file_chunks
+    chunck_model = ChunckModel(db_client=request.app.db_client)
 
+    if do_reset == 1:
+        _ = await chunck_model.delete_chunks_by_project_id(project_id=project.id)
+
+    num_recordes = await chunck_model.insert_many_chunks(
+        chunks=file_chunks_records,
+        batch_size=100
+    )
+
+    return JSONResponse(
+        content={
+            "Signal": ResponseSignal.FILE_PROCESSED_SUCCESSFULLY.value,
+            "inserted_chunks": num_recordes
+        }
+    )
 # to run python -m routes.data

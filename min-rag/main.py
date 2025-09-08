@@ -51,8 +51,23 @@
 from fastapi import FastAPI
 from src.routes.base import base_router
 from src.routes.data import data_router
+from motor.motor_asyncio import AsyncIOMotorClient
+from src.helpers.config import get_settings
+
 
 app = FastAPI()
+
+@app.on_event("startup")
+async def startup_db_client():
+    setting = get_settings()
+
+    app.mongo_conn = AsyncIOMotorClient(setting.MONGODB_URL) # all routes can access this using app.mongo_conn
+    app.db_client = app.mongo_conn[setting.MONGODB_DATABASE]
+
+@app.on_event("shutdown")
+async def shutdown_db_client():
+    app.mongo_conn.close() # close the connection when app shuts down
+
 
 app.include_router(data_router)
 app.include_router(base_router)
@@ -65,5 +80,26 @@ for route in app.routes:
 
 
 
+
+
+
+
+
+
+
+
+
+
+# ======================
+# python3 --version
+# sudo apt update
+# sudo apt install python3.12-venv -y  (Same Version as your python version)
+# python3 -m venv .venv
+# source .venv/bin/activate
+# pip list
+# sudo apt install python3-pip  (To install pip if not installed)
+# sudo apt install uvicorn
+# pip install fastapi uvicorn
+# ======================
 
 # uvicorn main:app --reload

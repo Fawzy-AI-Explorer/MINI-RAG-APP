@@ -1,0 +1,15 @@
+from pydantic import BaseModel, Field, validator
+from typing import Optional
+from bson import ObjectId
+
+
+class DataChunk(BaseModel):
+
+    id: Optional[ObjectId] = Field(None, alias="_id")
+    chunck_text: str = Field(..., min_length=1)
+    chunck_matadata: dict
+    chunck_order: int = Field(..., gt=0)  # Ensure non-negative integer
+    chunck_projec_id: ObjectId
+    
+    class Config:
+        arbitrary_types_allowed = True
