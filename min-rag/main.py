@@ -102,4 +102,13 @@ for route in app.routes:
 # pip install fastapi uvicorn
 # ======================
 
+# Run Docker : sudo docker compose up
+
+# This for local testing only Not for production
+# stop docker   ===>  sudo docker stop $(sudo docker ps -aq)
+# remove docker ===>  sudo docker rm $(sudo docker ps -aq)
+# remove images ===>  sudo docker rmi $(sudo docker images -q)
+# remove volumes ===>  sudo docker volume rm $(sudo docker volume ls -q)
+# clean up all unused docker objects ===>  sudo docker system prune --all
+
 # uvicorn main:app --reload

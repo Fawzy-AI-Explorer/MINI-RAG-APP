@@ -17,3 +17,13 @@ class Project(BaseModel):
     
     class Config: # to validate non pydantic types like ObjectId
         arbitrary_types_allowed = True
+
+    @classmethod
+    def get_indexes(cls):
+        return [
+            {
+                "keys": [("project_id", 1)], # 1 for ascending order -1 for descending
+                "name": "project_id_index_1",
+                "unique": True # ensure project_id is unique get error if duplicate
+            }
+        ]

@@ -28,11 +28,10 @@ async def welcome_data():
     return "welcome data"
 
 @data_router.post("/upload/{project_id}")
-async def upload_data(request: Request, project_id: str, 
-                      file: UploadFile = None, 
+async def upload_data(request: Request, project_id: str, file: UploadFile = None, 
                       app_settings: Settings = Depends(get_settings)):
     
-    project_model = ProjectModel(db_client=request.app.db_client)
+    project_model = await ProjectModel.create_instance(db_client=request.app.db_client)
     project = await project_model.get_project_or_create_one(project_id=project_id)
 
 
@@ -88,7 +87,7 @@ async def process_endpoint(request: Request, project_id: str, process_request: P
     do_reset = process_request.do_reset
 
 
-    project_model = ProjectModel(db_client=request.app.db_client)
+    project_model = await ProjectModel.create_instance(db_client=request.app.db_client)
     project = await project_model.get_project_or_create_one(project_id=project_id)
 
         # You can add validation for chunk_size and overlap_size if needed
@@ -119,7 +118,7 @@ async def process_endpoint(request: Request, project_id: str, process_request: P
         for i, chunk in enumerate(file_chunks)
     ]
 
-    chunck_model = ChunckModel(db_client=request.app.db_client)
+    chunck_model = await ChunckModel.create_instance(db_client=request.app.db_client)
 
     if do_reset == 1:
         _ = await chunck_model.delete_chunks_by_project_id(project_id=project.id)
