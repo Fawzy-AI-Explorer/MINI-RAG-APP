@@ -1,5 +1,4 @@
-from stores.LLMInterface import LLMInterface
-from stores.LLMEnums import LLMEnums
+from src.stores.LLMInterface import LLMInterface
 from ...LLMEnums import OpenAIEnums
 
 from openai import OpenAI
