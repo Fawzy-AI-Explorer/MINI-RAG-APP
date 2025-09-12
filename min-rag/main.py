@@ -73,9 +73,9 @@ app.include_router(data_router)
 app.include_router(base_router)
 
 
-print("✅ Routes:")
-for route in app.routes:
-    print(route.path, route.name)
+# print("✅ Routes:")
+# for route in app.routes:
+#     print(route.path, route.name)
 
 
 
