@@ -10,6 +10,7 @@ class DataChunk(BaseModel):
     chunck_matadata: dict
     chunck_order: int = Field(..., gt=0)  # Ensure non-negative integer
     chunck_projec_id: ObjectId
+    chunck_asset_id: ObjectId
     
     class Config:
         arbitrary_types_allowed = True
