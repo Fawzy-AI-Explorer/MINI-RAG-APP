@@ -11,7 +11,7 @@ class BaseController:
 
         self.app_settings = get_settings()
         self.base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))  
-        self.file_dir = os.path.join(self.base_dir, "assets", "files")  # To store uploaded files
+        self.file_dir = os.path.join(self.base_dir, "assets", "files") # To store uploaded files
 
         # print(f"__file__ :  {__file__}") # E:\DATA SCIENCE\MINI-RAG-APP\min-rag\src\controllers\BaseController.py
         # print(f"os.path.dirname(__file__), {os.path.dirname(__file__)}") # E:\DATA SCIENCE\MINI-RAG-APP\min-rag\src\controllers
