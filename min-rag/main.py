@@ -83,13 +83,6 @@ app.include_router(base_router)
 
 
 
-
-
-
-
-
-
-
 # ======================
 # python3 --version
 # sudo apt update
