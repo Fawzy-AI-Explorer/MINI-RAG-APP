@@ -17,6 +17,21 @@ class Settings(BaseSettings):
     MONGODB_URL:str
     MONGODB_DATABASE:str
 
+    GENERATION_BACKEND:str
+    EMBEDDING_BACKEND:str
+
+    OPENAI_API_KEY:str
+    OPENAI_API_URL:str
+    COHERE_API_KEY:str
+
+    GENERATION_MODEL_ID:str
+    EMBEDDING_MODEL_ID:str
+    EMBEDDING_MODEL_SIZE:int
+
+    iINPUT_DEFAULT_MAX_CHARACTERS:int
+    GENERATION_DEFAULT_MAX_TOKENS:int
+    GENERATION_DEFAULT_TEMPERATURE:float
+
     class Config:
         env_file = r"E:\DATA SCIENCE\MINI-RAG-APP\min-rag\.env" # r"/mnt/e/DATA SCIENCE/MINI-RAG-APP/min-rag/.env"
 
