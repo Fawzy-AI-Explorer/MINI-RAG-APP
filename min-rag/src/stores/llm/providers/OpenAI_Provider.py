@@ -1,11 +1,11 @@
-from src.stores.LLMInterface import LLMInterface
-from ...LLMEnums import OpenAIEnums
+from src.stores.llm.LLMInterface import LLMInterface
+from src.stores.llm.LLMEnums import OpenAIEnums
 
 from openai import OpenAI
 import logging
 
 
-class OpenAI_Provider(LLMInterface):
+class OpenAIProvider(LLMInterface):
 
     def __init__(self, api_key: str, api_url: str=None, 
                  default_input_max_characters: int=1000,
@@ -24,7 +24,9 @@ class OpenAI_Provider(LLMInterface):
         self.embedding_size = None
 
         self.client = OpenAI(api_key=self.api_key, 
-                             api_url=self.api_url)
+                            #  api_url=self.api_url
+                            base_url=self.api_url
+                    )
         
         self.logger = logging.getLogger(__name__)
 
@@ -95,3 +97,7 @@ class OpenAI_Provider(LLMInterface):
             "role": role, 
             "content": self.process_text(prompt)
         }
+
+
+if __name__ == "__main__":
+    print("This is OpenAI LLM Provider")
