@@ -53,21 +53,32 @@ from src.routes.base import base_router
 from src.routes.data import data_router
 from motor.motor_asyncio import AsyncIOMotorClient
 from src.helpers.config import get_settings
-
+from src.stores import LLMProviderFactory
 
 app = FastAPI()
 
 @app.on_event("startup")
 async def startup_db_client():
-    setting = get_settings()
+    settings = get_settings()
 
-    app.mongo_conn = AsyncIOMotorClient(setting.MONGODB_URL) # all routes can access this using app.mongo_conn
-    app.db_client = app.mongo_conn[setting.MONGODB_DATABASE]
+    app.mongo_conn = AsyncIOMotorClient(settings.MONGODB_URL) # all routes can access this using app.mongo_conn
+    app.db_client = app.mongo_conn[settings.MONGODB_DATABASE]
+
+    llm_provider_factory = LLMProviderFactory(settings)
+
+    app.generation_client = llm_provider_factory.create(provider=settings.GENERATION_BACKEND)
+    app.generation_client.set_generation_model(model_id=settings.GENERATION_MODEL_ID)
+
+    app.embedding_client = llm_provider_factory.create(provider=settings.EMBEDDING_BACKEND)
+    app.embedding_client.set_embedding_model(model_id=settings.EMBEDDING_MODEL_ID, 
+                                             embedding_size=settings.EMBEDDING_MODEL_SIZE)
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
     app.mongo_conn.close() # close the connection when app shuts down
 
+# app.router.lifespan.on_startup.append(startup_db_client)
+# app.router.lifespan.on_shutdown.append(shutdown_db_client)
 
 app.include_router(data_router)
 app.include_router(base_router)
@@ -76,13 +87,6 @@ app.include_router(base_router)
 # print("✅ Routes:")
 # for route in app.routes:
 #     print(route.path, route.name)
-
-
-
-
-
-
-
 
 
 
