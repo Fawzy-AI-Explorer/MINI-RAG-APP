@@ -1,19 +1,18 @@
-from stores import LLMInterface
-from stores import CoHereEnums, DocumentTypeEnums
+from src.stores import LLMInterface
+from src.stores import CoHereEnums, DocumentTypeEnums
 
 import cohere
 import logging
 
 
-class CoHere_provider(LLMInterface):
+class CoHereProvider(LLMInterface):
 
-    def __init__(self, api_key: str, api_url: str=None, 
+    def __init__(self, api_key: str, 
                  default_input_max_characters: int=1000,
                  default_generation_max_output_tokens: int=1000,
                  default_generation_temperature: float=0.1):
         
         self.api_key = api_key
-        self.api_url = api_url
 
         self.default_input_max_characters = default_input_max_characters
         self.default_generation_max_output_tokens = default_generation_max_output_tokens
