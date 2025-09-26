@@ -32,6 +32,13 @@ class Settings(BaseSettings):
     GENERATION_DEFAULT_MAX_TOKENS:int
     GENERATION_DEFAULT_TEMPERATURE:float
 
+    VECTOR_DB_BACKEND:str
+    VECTOR_DB_PATH:str
+    VECTOR_DB_DISTANCE_METHOD:str
+
+    PRIMARY_LANGUAGE:str
+    DEFAULT_LANGUAGE:str = "en"
+
     class Config:
         env_file = r"E:\DATA SCIENCE\MINI-RAG-APP\min-rag\.env" # r"/mnt/e/DATA SCIENCE/MINI-RAG-APP/min-rag/.env"
 

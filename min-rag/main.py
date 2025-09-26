@@ -51,20 +51,24 @@
 from fastapi import FastAPI
 from src.routes.base import base_router
 from src.routes.data import data_router
+from src.routes.nlp import nlp_router
 from motor.motor_asyncio import AsyncIOMotorClient
 from src.helpers.config import get_settings
 from src.stores import LLMProviderFactory
+from src.stores.vectordb.VectorDBProviderFactory import VectorDBProviderFactory
+from src.stores.llm.templates.template_parser import TemplateParser
 
 app = FastAPI()
 
 @app.on_event("startup")
-async def startup_db_client():
+async def startup_span():
     settings = get_settings()
 
     app.mongo_conn = AsyncIOMotorClient(settings.MONGODB_URL) # all routes can access this using app.mongo_conn
     app.db_client = app.mongo_conn[settings.MONGODB_DATABASE]
 
     llm_provider_factory = LLMProviderFactory(settings)
+    vectordb_provider_factory = VectorDBProviderFactory(settings)
 
     app.generation_client = llm_provider_factory.create(provider=settings.GENERATION_BACKEND)
     app.generation_client.set_generation_model(model_id=settings.GENERATION_MODEL_ID)
@@ -72,17 +76,26 @@ async def startup_db_client():
     app.embedding_client = llm_provider_factory.create(provider=settings.EMBEDDING_BACKEND)
     app.embedding_client.set_embedding_model(model_id=settings.EMBEDDING_MODEL_ID, 
                                              embedding_size=settings.EMBEDDING_MODEL_SIZE)
+    
+    app.vectordb_client = vectordb_provider_factory.create(provider=settings.VECTOR_DB_BACKEND)
+    app.vectordb_client.connect()
+
+    app.templat_parser = TemplateParser(
+        language=settings.PRIMARY_LANGUAGE,
+        defaulat_language=settings.DEFAULT_LANGUAGE
+    )
 
 @app.on_event("shutdown")
-async def shutdown_db_client():
+async def shutdown_span():
     app.mongo_conn.close() # close the connection when app shuts down
+    app.vectordb_client.disconnect()
 
 # app.router.lifespan.on_startup.append(startup_db_client)
 # app.router.lifespan.on_shutdown.append(shutdown_db_client)
 
 app.include_router(data_router)
 app.include_router(base_router)
-
+app.include_router(nlp_router)
 
 # print("✅ Routes:")
 # for route in app.routes:
@@ -116,3 +129,4 @@ app.include_router(base_router)
 # clean up all unused docker objects ===>  sudo docker system prune --all
 
 # uvicorn main:app --reload
+# sh scripts/run_app.sh
