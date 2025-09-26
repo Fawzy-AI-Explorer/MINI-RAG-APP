@@ -23,7 +23,8 @@ class CoHereProvider(LLMInterface):
         self.embedding_size = None
 
         self.client = cohere.ClientV2(api_key=self.api_key)
-        
+
+        self.enums = CoHereEnums
         self.logger = logging.getLogger(__name__)
 
     def set_generation_model(self, model_id: str):
@@ -74,12 +75,17 @@ class CoHereProvider(LLMInterface):
             temperature = temperature
         )
 
-        if not response or not response['message'] or not response['message']["content"] or len(response['message']["content"]) == 0 or not response['message']["content"][0]["text"]:
+        # if not response or not response['message'] or not response['message']["content"] or len(response['message']["content"]) == 0 or not response['message']["content"][0]["text"]:
+        if not response or not response.message or not response.message.content or len(response.message.content) == 0 or not response.message.content[0].text:
+        
+        # if not response or not response.message or not response.message.
+
+
             self.logger.error("No text returned from OpenAI.")
             return None
 
 
-        return response['message']["content"][0]["text"]
+        return response.message.content[0].text
     
     def embed_text(self, text: str, document_type: str=None):
 
