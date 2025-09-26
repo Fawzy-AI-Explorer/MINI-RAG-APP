@@ -36,13 +36,26 @@ class ChunckModel(BaseDataModel):
         chunck._id = result.inserted_id
         return chunck
     # ==============================================================
-    async def get_chunks(self, chunck_id:str):
-        result = await self.collection.find_one({
-            "_id": ObjectId(chunck_id) # this is a filter (like where in SQL where project_id = project_id)
-            })
-        if result is None:
-            return None
-        return DataChunk(**result)
+    # async def get_projects_chunks(self, chunck_id:str):
+    #     result = await self.collection.find_one({
+    #         "_id": ObjectId(chunck_id) # this is a filter (like where in SQL where project_id = project_id)
+    #         })
+    #     if result is None:
+    #         return None
+    #     return DataChunk(**result)
+
+    async def get_projects_chunks(self, project_id: ObjectId, page_no: int = 1, page_size: int = 100):
+        records = await self.collection.find({
+            "chunck_projec_id": project_id
+        }).skip(
+            (page_no - 1) * page_size).limit(page_size).to_list(length=None)
+        
+        return [
+            DataChunk(**record) 
+            for record in records
+        ]
+    
+
     # ==============================================================
     async def insert_many_chunks(self, chunks: list, batch_size: int=100):
 
