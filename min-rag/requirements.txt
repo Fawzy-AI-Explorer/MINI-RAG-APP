@@ -1,5 +1,5 @@
 fastapi==0.116.1
-# fastapi uvicorn
+uvicorn
 python-multipart==0.0.20
 python-dotenv==1.1.1
 pydantic-settings==2.10.1
@@ -12,3 +12,5 @@ openai==1.77.0
 cohere==5.15.0
 setuptools==65.5.0
 qdrant-client==1.15.1
+SQLAlchemy==2.0.43
+asyncpg==0.30.0
