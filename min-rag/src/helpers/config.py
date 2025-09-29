@@ -40,7 +40,9 @@ class Settings(BaseSettings):
     DEFAULT_LANGUAGE:str = "en"
 
     class Config:
-        env_file = r"E:\DATA SCIENCE\MINI-RAG-APP\min-rag\.env" # r"/mnt/e/DATA SCIENCE/MINI-RAG-APP/min-rag/.env"
+        # env_file = r"\mnt\E:\DATA SCIENCE\MINI-RAG-APP\min-rag\.env" # r"/mnt/e/DATA SCIENCE/MINI-RAG-APP/min-rag/.env"
+        env_file = r"/mnt/e/DATA SCIENCE/MINI-RAG-APP/min-rag/.env"
+
 
 def get_settings():
 
