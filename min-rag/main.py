@@ -37,26 +37,18 @@
 
 
 
-# from dotenv import load_dotenv
-# load_dotenv(".env") # this loading should ba done befor importing any other modules that use environment variables
 
-# from src.routes.base import base_router
-# from src.routes import base
-
-
-# import sys
-# import os
-# sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
 
 from fastapi import FastAPI
 from src.routes.base import base_router
 from src.routes.data import data_router
 from src.routes.nlp import nlp_router
-from motor.motor_asyncio import AsyncIOMotorClient
 from src.helpers.config import get_settings
 from src.stores import LLMProviderFactory
 from src.stores.vectordb.VectorDBProviderFactory import VectorDBProviderFactory
 from src.stores.llm.templates.template_parser import TemplateParser
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.orm import sessionmaker
 
 app = FastAPI()
 
@@ -64,8 +56,11 @@ app = FastAPI()
 async def startup_span():
     settings = get_settings()
 
-    app.mongo_conn = AsyncIOMotorClient(settings.MONGODB_URL) # all routes can access this using app.mongo_conn
-    app.db_client = app.mongo_conn[settings.MONGODB_DATABASE]
+    postgres_conn = f"postgresql+asyncpg://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_MAIN_DATABASE}"
+    app.db_engine = create_async_engine(postgres_conn)
+    app.db_client = sessionmaker(
+        app.db_enginr, class_=AsyncSession, expire_on_commit=False
+    )
 
     llm_provider_factory = LLMProviderFactory(settings)
     vectordb_provider_factory = VectorDBProviderFactory(settings)
@@ -87,7 +82,7 @@ async def startup_span():
 
 @app.on_event("shutdown")
 async def shutdown_span():
-    app.mongo_conn.close() # close the connection when app shuts down
+    app.db_engine.dispose() # close the connection when app shuts down
     app.vectordb_client.disconnect()
 
 # app.router.lifespan.on_startup.append(startup_db_client)
