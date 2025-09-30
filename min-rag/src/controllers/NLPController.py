@@ -1,6 +1,7 @@
 from src.controllers.BaseController import BaseController
-from src.models.db_schemes.project import Project
-from src.models.db_schemes.data_chunk import DataChunk
+
+
+from src.models.db_schemes import Project, DataChunk
 from src.stores.llm.LLMEnums import DocumentTypeEnums
 
 from src.controllers.ProjectController import ProjectController
@@ -38,8 +39,8 @@ class NLPController(BaseController):
                              do_reset: bool = False):
         collection_name = self.create_collection_name(project_id=project.project_id)
 
-        texts = [chunk.chunck_text for chunk in chunks]
-        metadatas = [chunk.chunck_matadata for chunk in chunks]
+        texts = [chunk.chunk_text for chunk in chunks]
+        metadatas = [chunk.chunk_metadata for chunk in chunks]
         vectors = [
             self.embedding_client.embed_text(text=text, 
                                              document_type=DocumentTypeEnums.DOCUMENT.value)
@@ -97,7 +98,7 @@ class NLPController(BaseController):
         document_prompts = "\n".join([
             self.template_parser.get("rag", "document_prompt", {
                 "doc_num": idx + 1,
-                "chunck_text": doc.text
+                "chunk_text": self.generation_client.process_text(doc.text)
             })
             for idx, doc in enumerate(retrieved_documents)
         ])
