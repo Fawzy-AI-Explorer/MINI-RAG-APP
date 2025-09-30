@@ -1,4 +1,7 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, SettingsConfigDict, YamlConfigSettingsSource
+from pathlib import Path
+
 
 class Settings(BaseSettings):
     """
@@ -42,9 +45,32 @@ class Settings(BaseSettings):
     PRIMARY_LANGUAGE:str
     DEFAULT_LANGUAGE:str = "en"
 
-    class Config:
-        # env_file = r"\mnt\E:\DATA SCIENCE\MINI-RAG-APP\min-rag\.env" # r"/mnt/e/DATA SCIENCE/MINI-RAG-APP/min-rag/.env"
-        env_file = r"/mnt/e/DATA SCIENCE/MINI-RAG-APP/min-rag/.env"
+    # class Config:
+    #     # env_file = r"\mnt\E:\DATA SCIENCE\MINI-RAG-APP\min-rag\.env" # r"/mnt/e/DATA SCIENCE/MINI-RAG-APP/min-rag/.env"
+    #     env_file = r"/mnt/e/DATA SCIENCE/MINI-RAG-APP/min-rag/.env"
+
+    model_config = SettingsConfigDict(env_file=r".env", env_file_encoding="utf-8")
+
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls,
+        init_settings,
+        env_settings,
+        dotenv_settings,
+        file_secret_settings,
+    ):
+        return (
+            init_settings,  # kwargs passed directly to Settings()
+            env_settings,  # Environment variables
+            dotenv_settings,  # .env file
+            YamlConfigSettingsSource(
+                settings_cls,
+                yaml_file=Path(r"config\config.yaml"),
+                yaml_file_encoding="utf-8",
+            ),  # YAML file
+            file_secret_settings,  # Secrets from files
+        )
 
 
 def get_settings():
@@ -60,5 +86,4 @@ if __name__ == "__main__":
     print(settings.FILE_MAX_SIZE)
 
 
-# min-rag/src/
 # to run : python -m helpers.config
