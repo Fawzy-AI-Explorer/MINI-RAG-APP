@@ -1,7 +1,8 @@
 from qdrant_client import models, QdrantClient
 from src.stores.vectordb.VectorDBInterface import VectorDBInterface
 from src.stores.vectordb.VectorDBEnums import DistanceMetricEnums
-from src.models.db_schemes.data_chunk import RetrievedDocument
+# from src.models.db_schemes.data_chunk import RetrievedDocument
+from src.models.db_schemes import RetrievedDocument
 from typing import List
 import logging
 
