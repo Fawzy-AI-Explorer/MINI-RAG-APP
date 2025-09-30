@@ -20,7 +20,7 @@ system_prompt = Template(
 document_prompt = Template(
         "\n".join([
                 "## رقم المستند: $doc_num",
-                "### المحتوى: $chunck_text",
+                "### المحتوى: $chunk_text",
     ])
 )
 
