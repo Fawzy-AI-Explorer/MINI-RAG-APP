@@ -1,7 +1,6 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic_settings import BaseSettings, SettingsConfigDict, YamlConfigSettingsSource
 from pathlib import Path
-
+from typing import List
 
 class Settings(BaseSettings):
     """
@@ -13,37 +12,40 @@ class Settings(BaseSettings):
     APP_VERSION: str
     API: str
 
-    FILE_ALLOWED_TYPES: list[str]
+    FILE_ALLOWED_TYPES: List[str]
     FILE_MAX_SIZE: int
     FILE_DEFAULT_CHUNK_SIZE: int
 
-    POSTGRES_USERNAME:str
-    POSTGRES_PASSWORD:str
-    POSTGRES_HOST:str
-    POSTGRES_PORT:int
-    POSTGRES_MAIN_DATABASE:str
+    POSTGRES_USERNAME: str
+    POSTGRES_PASSWORD: str
+    POSTGRES_HOST: str
+    POSTGRES_PORT: int
+    POSTGRES_MAIN_DATABASE: str
 
-    GENERATION_BACKEND:str
-    EMBEDDING_BACKEND:str
+    GENERATION_BACKEND: str
+    EMBEDDING_BACKEND: str
 
-    OPENAI_API_KEY:str
-    OPENAI_API_URL:str
-    COHERE_API_KEY:str
+    OPENAI_API_KEY: str
+    OPENAI_API_URL: str
+    COHERE_API_KEY: str
 
-    GENERATION_MODEL_ID:str
-    EMBEDDING_MODEL_ID:str
-    EMBEDDING_MODEL_SIZE:int
+    GENERATION_MODEL_ID_LITERAL: List[str]
+    GENERATION_MODEL_ID: str
+    EMBEDDING_MODEL_ID: str
+    EMBEDDING_MODEL_SIZE: int
 
-    iINPUT_DEFAULT_MAX_CHARACTERS:int
-    GENERATION_DEFAULT_MAX_TOKENS:int
-    GENERATION_DEFAULT_TEMPERATURE:float
+    iINPUT_DEFAULT_MAX_CHARACTERS: int
+    GENERATION_DEFAULT_MAX_TOKENS: int
+    GENERATION_DEFAULT_TEMPERATURE: float
 
-    VECTOR_DB_BACKEND:str
-    VECTOR_DB_PATH:str
-    VECTOR_DB_DISTANCE_METHOD:str
+    VECTOR_DB_BACKEND_LITERAL: List[str]
+    VECTOR_DB_BACKEND: str
+    VECTOR_DB_PATH: str
+    VECTOR_DB_DISTANCE_METHOD: str
+    VECTOR_DB_PGVEC_INDEX_THRESHOLD: int = 100
 
-    PRIMARY_LANGUAGE:str
-    DEFAULT_LANGUAGE:str = "en"
+    PRIMARY_LANGUAGE: str
+    DEFAULT_LANGUAGE: str = "en"
 
     # class Config:
     #     # env_file = r"\mnt\E:\DATA SCIENCE\MINI-RAG-APP\min-rag\.env" # r"/mnt/e/DATA SCIENCE/MINI-RAG-APP/min-rag/.env"
