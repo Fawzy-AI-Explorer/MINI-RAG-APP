@@ -49,9 +49,9 @@ from src.stores.vectordb.VectorDBProviderFactory import VectorDBProviderFactory
 from src.stores.llm.templates.template_parser import TemplateParser
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
+from fastapi.middleware.cors import CORSMiddleware  # Import CORS middleware
 
 app = FastAPI()
-
 @app.on_event("startup")
 async def startup_span():
     settings = get_settings()
@@ -63,7 +63,7 @@ async def startup_span():
     )
 
     llm_provider_factory = LLMProviderFactory(settings)
-    vectordb_provider_factory = VectorDBProviderFactory(settings)
+    vectordb_provider_factory = VectorDBProviderFactory(config = settings, db_client=app.db_client)
 
     app.generation_client = llm_provider_factory.create(provider=settings.GENERATION_BACKEND)
     app.generation_client.set_generation_model(model_id=settings.GENERATION_MODEL_ID)
@@ -73,9 +73,9 @@ async def startup_span():
                                              embedding_size=settings.EMBEDDING_MODEL_SIZE)
     
     app.vectordb_client = vectordb_provider_factory.create(provider=settings.VECTOR_DB_BACKEND)
-    app.vectordb_client.connect()
+    await app.vectordb_client.connect()
 
-    app.templat_parser = TemplateParser(
+    app.template_parser = TemplateParser(
         language=settings.PRIMARY_LANGUAGE,
         defaulat_language=settings.DEFAULT_LANGUAGE
     )
@@ -83,10 +83,31 @@ async def startup_span():
 @app.on_event("shutdown")
 async def shutdown_span():
     app.db_engine.dispose() # close the connection when app shuts down
-    app.vectordb_client.disconnect()
+    await app.vectordb_client.disconnect()
 
 # app.router.lifespan.on_startup.append(startup_db_client)
 # app.router.lifespan.on_shutdown.append(shutdown_db_client)
+
+
+# --- CORS Middleware Configuration ---
+# This allows your frontend (the HTML file) to make requests to this backend server.
+origins = [
+    "http://localhost",
+    "http://localhost:8000",
+    "http://127.0.0.1",
+    "http://127.0.0.1:8000",
+    "null",  # Allow requests from local files (file://)
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods (GET, POST, OPTIONS)
+    allow_headers=["*"],  # Allows all headers
+)
+# -----------------------------------
+
 
 app.include_router(data_router)
 app.include_router(base_router)
@@ -125,3 +146,4 @@ app.include_router(nlp_router)
 
 # uvicorn main:app --reload
 # sh scripts/run_app.sh
+
