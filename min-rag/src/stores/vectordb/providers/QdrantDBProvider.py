@@ -15,6 +15,7 @@ class QdrantDBProvider(VectorDBInterface):
         self.client = None
         self.db_client = db_client
         self.distance_method = None
+        self.default_vector_size = default_vector_size
 
         if distance_method == DistanceMethodEnums.COSINE.value:
             self.distance_method = models.Distance.COSINE
@@ -42,6 +43,7 @@ class QdrantDBProvider(VectorDBInterface):
     
     async def delete_collection(self, collection_name: str) -> bool:
         if self.is_collection_exists(collection_name):
+            self.logger.info(f"Deleting collection: {collection_name}")
             return self.client.delete_collection(collection_name=collection_name)
 
 
@@ -70,7 +72,7 @@ class QdrantDBProvider(VectorDBInterface):
             return True
         return False
 
-    async def inser_one(self, collection_name: str, text: str, vector: List, 
+    async def insert_one(self, collection_name: str, text: str, vector: List, 
                   metadata: dict = None,
                   record_id: str = None):
         
@@ -100,11 +102,11 @@ class QdrantDBProvider(VectorDBInterface):
 
 
     async def insert_many(self, collection_name: str, texts: List, 
-                    vectors: List, metadatas: List = None,
+                    vectors: List, metadata: List = None,
                     record_ids: List = None, batch_size: int = 50):
     
-        if metadatas is None:
-            metadatas = [None] * len(texts)
+        if metadata is None:
+            metadata = [None] * len(texts)
 
         if record_ids is None:
             record_ids = list(range(0, len(texts)))
@@ -114,7 +116,7 @@ class QdrantDBProvider(VectorDBInterface):
             batch_end = i + batch_size
             batch_texts = texts[i: batch_end]
             batch_vectors = vectors[i: batch_end]
-            batch_metadatas = metadatas[i: batch_end]
+            batch_metadatas = metadata[i: batch_end]
             batch_record_ids = record_ids[i: batch_end]
 
             batch_records = [
@@ -123,7 +125,7 @@ class QdrantDBProvider(VectorDBInterface):
                     vector=batch_vectors[x],
                     payload={
                         "text": batch_texts[x],
-                        "metadata": metadatas[x]
+                        "metadata": metadata[x]
                     }
                 )
                 for x in range(len(batch_texts))
