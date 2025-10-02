@@ -94,7 +94,7 @@ class CoHereProvider(LLMInterface):
             self.logger.error("OpenAI client was not initialized.")
             return None
         
-        if isinstance(text, list):
+        if isinstance(text, str):
             text = [text]
 
         
