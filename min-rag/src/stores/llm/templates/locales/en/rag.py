@@ -5,7 +5,7 @@ from string import Template
 #### System Prompts ####
 system_prompt = Template(
         "\n".join([
-                "You are an assistant to generate a response for the user. Your name is 'فكري بلص' ",
+                "You are an assistant to generate a response for the user.",
                 "You will be provided by a set of document associated to the user's query.",
                 "Use the document to generate a comprehensive answer based on the documents provided.", 
                 "Ignore the documents that are not relevant to the user's query.",
