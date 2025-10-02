@@ -4,12 +4,20 @@ from src.controllers.ProjectController import ProjectController
 from src.models.enums.ProcessingEnums import ProcessingEnums
 # import re
 import os
+from typing import List
+from dataclasses import dataclass
 from langchain_community.document_loaders import PyMuPDFLoader, TextLoader
 # https://python.langchain.com/docs/integrations/document_loaders/
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter # split by characters but not stop in the middle of words if param=10 split by 10 characters if the end of the 10th character is not a space, it will go back to the previous space and split there
 # https://python.langchain.com/docs/how_to/recursive_text_splitter/
 # https://python.langchain.com/api_reference/text_splitters/character/langchain_text_splitters.character.RecursiveCharacterTextSplitter.html
+
+
+@dataclass
+class Document:
+    page_content: str
+    metadata: dict
 
 class ProcessController(BaseController):
     
@@ -78,12 +86,62 @@ class ProcessController(BaseController):
             rec.metadata
             for rec in file_content
         ]
-        chunks = text_splitter.create_documents(
-            file_content_texts,
-            metadatas=file_content_metadata
+        # chunks = text_splitter.create_documents(
+        #     file_content_texts,
+        #     metadatas=file_content_metadata
+        # )
+        chunks = self.process_simpler_splitter(
+            texts=file_content_texts,
+            metadatas=file_content_metadata,
+            chunk_size=chunk_size,
+            splitter_tag="================"
         )
 
         return chunks
+    
+    def process_simpler_splitter(self, 
+                                 texts: List[str], 
+                                 metadatas: List[dict], 
+                                 chunk_size: int, 
+                                 splitter_tag: str="================"
+        ):
+        
+        full_text = " ".join(texts)
+
+        # split by splitter_tag
+        lines = [ doc.strip() for doc in full_text.split(splitter_tag) if len(doc.strip()) > 0 ]
+
+        print("hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh")
+        for l in lines:
+            print(f"line: {l}\n\n")
+
+        chunks = []
+        current_chunk = ""
+
+        for line in lines:
+            chunks.append(Document(
+                page_content=line,
+                metadata={}
+            ))
+        return chunks
+        # for line in lines:
+        #     current_chunk += line + splitter_tag # remove the splitter_tag if you don't want it in the chunk
+        #     if len(current_chunk) >= chunk_size:
+        #         chunks.append(Document(
+        #             page_content=current_chunk.strip(),
+        #             metadata={}
+        #         ))
+
+        #         current_chunk = ""
+
+        # if len(current_chunk) >= 0:
+        #     chunks.append(Document(
+        #         page_content=current_chunk.strip(),
+        #         metadata={}
+        #     ))
+
+        # return chunks
+
 
 if __name__ == "__main__":
     print("ProcessController initialized with app settings:")
