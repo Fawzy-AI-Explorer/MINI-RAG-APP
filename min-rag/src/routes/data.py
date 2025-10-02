@@ -7,7 +7,7 @@ import os
 from src.helpers.config import get_settings, Settings
 
 from src.controllers.DataController import DataController
-from src.controllers.ProjectController import ProjectController
+from src.controllers.NLPController import NLPController
 from src.controllers.ProcesController import ProcessController
 
 from src.models.db_schemes import Asset, DataChunk
@@ -107,6 +107,12 @@ async def process_endpoint(request: Request, project_id: int, process_request: P
 
     project_model = await ProjectModel.create_instance(db_client=request.app.db_client)
     project = await project_model.get_project_or_create_one(project_id=project_id)
+    nlp_controller = NLPController(
+        vectordb_client=request.app.vectordb_client,
+        generation_client=request.app.generation_client,
+        embedding_client=request.app.embedding_client,
+        template_parser=request.app.template_parser
+    )
     asset_model = await AssetModel.create_instance(db_client=request.app.db_client)
 
 
@@ -154,6 +160,10 @@ async def process_endpoint(request: Request, project_id: int, process_request: P
     num_files = 0
 
     if do_reset == 1:
+        collection_name = nlp_controller.create_collection_name(project_id=project.project_id)
+
+        _ = await request.app.vectordb_client.delete_collection(collection_name=collection_name)
+
         _ = await chunk_model.delete_chunks_by_project_id(project_id=project.project_id)
 
     for asset_id, file_id in project_file_ids.items(): # file_id is asset_name in Asset model
