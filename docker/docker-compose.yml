@@ -1,4 +1,4 @@
-services:
+services: 
   # FastAPI Application
   fastapi:
     build:
