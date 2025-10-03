@@ -5,7 +5,7 @@ from typing import List
 class Settings(BaseSettings):
     """
     Configuration settings for the application.
-    Put here all var exist in .env file
+    Put here all var exist in .env file and config.yaml
     """
 
     APP_NAME: str 
