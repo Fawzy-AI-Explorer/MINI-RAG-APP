@@ -111,9 +111,8 @@ class ProcessController(BaseController):
         # split by splitter_tag
         lines = [ doc.strip() for doc in full_text.split(splitter_tag) if len(doc.strip()) > 0 ]
 
-        print("hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh")
-        for l in lines:
-            print(f"line: {l}\n\n")
+        # for l in lines:
+        #     print(f"line: {l}\n\n")
 
         chunks = []
         current_chunk = ""
