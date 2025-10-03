@@ -1,6 +1,7 @@
 from src.controllers.BaseController import BaseController
-from src.models.db_schemes.project import Project
-from src.models.db_schemes.data_chunk import DataChunk
+
+
+from src.models.db_schemes import Project, DataChunk
 from src.stores.llm.LLMEnums import DocumentTypeEnums
 
 from src.controllers.ProjectController import ProjectController
@@ -19,58 +20,63 @@ class NLPController(BaseController):
         self.template_parser = template_parser
 
     def create_collection_name(self, project_id: str):
-        return f"collection_{project_id}".strip()
+        return f"collection_{self.vectordb_client.default_vector_size}_{project_id}".strip()
     
-    def reset_db_collection(self, project: Project):
+    async def reset_db_collection(self, project: Project):
         collection_name = self.create_collection_name(project_id=project.project_id)
-        return self.vectordb_client.delete_collection(collection_name=collection_name)
+        return await self.vectordb_client.delete_collection(collection_name=collection_name)
 
-    def get_vector_db_collection_info(self, project: Project):
+    async def get_vector_db_collection_info(self, project: Project):
         collection_name = self.create_collection_name(project_id=project.project_id)
-        collection_info =  self.vectordb_client.get_collection_info(collection_name=collection_name)
+        collection_info =  await self.vectordb_client.get_collection_info(collection_name=collection_name)
 
         return json.loads(
             json.dumps(collection_info, default=lambda x: x.__dict__)
             )
     
-    def index_into_vector_db(self, project: Project, chunks: List[DataChunk], 
+    async def index_into_vector_db(self, project: Project, chunks: List[DataChunk], 
                              chuncks_ids : List[int],
                              do_reset: bool = False):
         collection_name = self.create_collection_name(project_id=project.project_id)
 
-        texts = [chunk.chunck_text for chunk in chunks]
-        metadatas = [chunk.chunck_matadata for chunk in chunks]
-        vectors = [
-            self.embedding_client.embed_text(text=text, 
+        texts = [chunk.chunk_text for chunk in chunks]
+        metadatas = [chunk.chunk_metadata for chunk in chunks]
+        vectors = self.embedding_client.embed_text(text=texts, 
                                              document_type=DocumentTypeEnums.DOCUMENT.value)
-            for text in texts
-        ]
-
-        _ = self.vectordb_client.create_collection(collection_name=collection_name,
+        
+        _ = await self.vectordb_client.create_collection(collection_name=collection_name,
                                                    embedding_size=self.embedding_client.embedding_size,
                                                    do_reset=do_reset
                                                    )
 
-        _ = self.vectordb_client.insert_many(collection_name=collection_name,
+        _ = await self.vectordb_client.insert_many(collection_name=collection_name,
                                             texts=texts,
                                             vectors=vectors, 
-                                            metadatas = metadatas,
+                                            metadata = metadatas,
                                             record_ids = chuncks_ids
                                             )
         return True
 
 
-    def search_vector_db_collection(self, project: Project, text: str, limit: int = 10):
+    async def search_vector_db_collection(self, project: Project, text: str, limit: int = 10):
+
+        query_vector = None
         collection_name = self.create_collection_name(project_id=project.project_id)
-        vector = self.embedding_client.embed_text(text=text, 
+        vectors = self.embedding_client.embed_text(text=text, 
                                                   document_type=DocumentTypeEnums.QUERY.value)
         
-        if not vector or len(vector) == 0:
+        if not vectors or len(vectors) == 0:
             return False
         
-        results = self.vectordb_client.search_by_vector(
+        if isinstance(vectors, list) and len(vectors) > 0:
+            query_vector = vectors[0]
+
+        if not query_vector:
+            return False
+        
+        results = await self.vectordb_client.search_by_vector(
             collection_name=collection_name,
-            vector=vector,
+            vector=query_vector,
             limit=limit
         )
 
@@ -79,11 +85,11 @@ class NLPController(BaseController):
         
         return results
 
-    def answer_rag_question(self, project: Project, query: str, limit: int=5):
+    async def answer_rag_question(self, project: Project, query: str, limit: int=5):
 
         answer, full_prompt, chat_history = None, None, None
 
-        retrieved_documents = self.search_vector_db_collection(
+        retrieved_documents = await self.search_vector_db_collection(
             project=project,
             text=query,
             limit=limit
@@ -97,7 +103,7 @@ class NLPController(BaseController):
         document_prompts = "\n".join([
             self.template_parser.get("rag", "document_prompt", {
                 "doc_num": idx + 1,
-                "chunck_text": doc.text
+                "chunk_text": self.generation_client.process_text(doc.text)
             })
             for idx, doc in enumerate(retrieved_documents)
         ])

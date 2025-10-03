@@ -1,0 +1,27 @@
+global:
+  scrape_interval: 15s      # each 15 seconds collect metrics from targets by default
+  evaluation_interval: 15s  # each 15 seconds evaluate the collected metrices  (if any)
+
+scrape_configs:
+
+  - job_name: 'fastapi'
+    static_configs:
+      - targets: ['fastapi:8000']
+    metrics_path: '/metrics' # Same as utils/metrics.py endpoint
+
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']        # localhost because prometheus is scraping itself
+
+  - job_name: 'qdrant'
+    static_configs:
+      - targets: ['qdrant:6333']
+    metrics_path: '/metrics'
+
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187'] # postgres-exporter is the service name in docker-compose.yml, 9187 is the port in docker-compose.yml
