@@ -1,3 +1,6 @@
+# ===========================
+# Asset Model
+# ===========================
 from models.db_schemes.miniragdb.schemes.miniragdb_base import SQLAlchemyBase 
 from sqlalchemy import Column, Integer, DateTime, func, String, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID, JSONB
@@ -6,6 +9,25 @@ from sqlalchemy import Index
 import uuid
 
 class Asset(SQLAlchemyBase):
+    """
+    Represents an uploaded file or resource belonging to a project.
+
+    Each `Asset` corresponds to a physical or logical data source (e.g., a PDF, CSV, etc.)
+    from which multiple `DataChunk` records may be generated for indexing or analysis.
+
+    Attributes:
+        asset_id (int): Auto-incremented internal primary key.
+        asset_uuid (UUID): Public unique identifier for secure external access.
+        asset_type (str): Type of asset (e.g., "FILE", "TEXT", "URL").
+        asset_name (str): Original or generated file name.
+        asset_size (int): File size in bytes.
+        asset_config (dict): Optional configuration data stored as JSONB.
+        asset_project_id (int): Foreign key linking to the parent project.
+        created_at (datetime): Creation timestamp.
+        updated_at (datetime): Last modification timestamp.
+        project (relationship): Parent `Project` record.
+        chunks (relationship): All `DataChunk` records derived from this asset.
+    """
 
     __tablename__ = "assets"
 
