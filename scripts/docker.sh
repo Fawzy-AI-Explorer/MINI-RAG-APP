@@ -1,6 +1,6 @@
 # Docker
 # run docker
-docker compose -f "docker/docker-compose.yml" up -d --build
+docker compose up --build
 
 # stop all running containers
 sudo docker stop $(sudo docker ps -aq)
@@ -16,6 +16,14 @@ sudo docker volume rm $(sudo docker volume ls -q)
 
 # clean up everything
 sudo docker system prune --all
+
+# show app folders and files 
+docker compose up -d
+docker exec -it fastapi bash
+cd /app
+ls
+ls -al
+
 
 
 # PGvector service
