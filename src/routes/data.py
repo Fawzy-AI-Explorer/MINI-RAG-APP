@@ -212,4 +212,49 @@ async def process_endpoint(request: Request, project_id: int, process_request: P
             "processed_files": num_files
         }
     )
+
+@data_router.post("/delete/{project_id}")
+async def delete_project_data(request: Request, project_id: int):
+
+    project_model = await ProjectModel.create_instance(db_client=request.app.db_client)
+    project = await project_model.get_project_or_create_one(project_id=project_id)
+
+    if not project:
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={
+                "Signal": ResponseSignal.PROJECT_NOT_FOUND.value
+            }
+        )
+
+    chunk_model = await ChunkModel.create_instance(db_client=request.app.db_client)
+    asset_model = await AssetModel.create_instance(db_client=request.app.db_client)
+
+    nlp_controller = NLPController(
+        vectordb_client=request.app.vectordb_client,
+        generation_client= request.app.generation_client, 
+        embedding_client = request.app.embedding_client,
+        template_parser=request.app.template_parser
+    )
+
+    # delete vector db collection
+    collection_name = nlp_controller.create_collection_name(project_id=project.project_id)
+    _ = await request.app.vectordb_client.delete_collection(collection_name=collection_name)
+
+    # delete chunks
+    deleted_chunks = await chunk_model.delete_chunks_by_project_id(project_id=project.project_id)
+
+    # delete assets
+    deleted_assets = await asset_model.delete_assets_by_project_id(project_id=project.project_id)
+
+    return JSONResponse(
+        content={
+            "Signal": ResponseSignal.PROJECT_DATA_DELETED.value,
+            "deleted_chunks": deleted_chunks,
+            "deleted_assets": deleted_assets
+        }
+    )
+
+
+
 # to run python -m routes.data
