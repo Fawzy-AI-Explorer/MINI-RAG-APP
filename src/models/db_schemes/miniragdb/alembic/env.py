@@ -2,7 +2,7 @@ from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
-from src.models.db_schemes.miniragdb.schemes.miniragdb_base import SQLAlchemyBase
+from models.db_schemes.miniragdb.schemes.miniragdb_base import SQLAlchemyBase
 
 
 from alembic import context
