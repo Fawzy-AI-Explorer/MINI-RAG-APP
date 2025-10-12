@@ -3,7 +3,7 @@
 ### Configuration
 
 - initialize Alembic, first go to directory where you want to create alembic folder 
-- (cd src/models/db_schemes/miniragdb/) 
+- (cd src/models/db_schemes/miniragdb/)
 
 ```bash
 cp alembic.ini.example alembic.ini
