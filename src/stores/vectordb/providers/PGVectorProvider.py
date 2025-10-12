@@ -64,6 +64,9 @@ class PGVectorProvider(VectorDBInterface):
         return records
     
     async def get_collection_info(self, collection_name: str) -> dict:
+
+        exists = await self.is_collection_exists(collection_name)
+
         async with self.db_client() as session:
             async with session.begin():
                 
