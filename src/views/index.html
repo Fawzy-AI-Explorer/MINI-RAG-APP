@@ -104,6 +104,19 @@
                 <p class="text-gray-500 text-sm px-2">History disabled.</p>
              </div>
         </div>
+      
+         <!-- New Upload Section -->
+        <div class="mb-6">
+            <h3 class="text-sm font-semibold text-gray-400 px-2 mb-2">Upload File</h3>
+            <form id="upload-form" class="flex flex-col space-y-2">
+                <input type="file" id="file-input" class="text-gray-200 text-sm">
+                <button type="submit" class="bg-indigo-600 text-white py-1 rounded hover:bg-indigo-700">
+                    Upload
+                </button>
+            </form>
+            <p id="upload-status" class="text-xs text-gray-400 mt-1"></p>
+        </div>
+
         <div class="border-t border-gray-700 pt-4">
             <a href="#" class="flex items-center p-2 rounded-md hover:bg-gray-700 pointer-events-none">
                 <i data-lucide="help-circle" class="w-5 h-5 mr-3"></i>
@@ -163,6 +176,10 @@
             </div>
         </div>
     </main>
+
+
+
+
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -235,7 +252,7 @@
                     const modelResponse = await callCustomAPI(prompt);
                     // Update the loading indicator with the actual response
                     loadingIndicator.innerHTML = `
-                        <img src="https://placehold.co/40x40/10b981/ffffff?text=Fawry" alt="Chatbot Avatar" class="w-10 h-10 rounded-full mr-4 flex-shrink-0">
+                        <img src="https://placehold.co/40x40/10b981/ffffff?text=C" alt="Chatbot Avatar" class="w-10 h-10 rounded-full mr-4 flex-shrink-0">
                         <div class="prose prose-invert max-w-none text-gray-200" dir="auto" style="white-space: pre-wrap; text-align: start;">
                             ${marked.parse(modelResponse)}
                         </div>
@@ -283,8 +300,10 @@
             };
 
             const callCustomAPI = async (prompt) => {
-                // IMPORTANT: Replace 'http://localhost:8000' with your actual API server address if it's different.
-                const apiUrl = 'http://127.0.0.1:8000/api/v1/nlp/index/answer/7';
+                
+                // const apiUrl = 'http://40.66.40.209/api/v1/nlp/index/answer/1';
+                const apiUrl = 'http://127.0.0.1:8000/api/v1/nlp/index/answer/1';
+
                 
                 // NOTE: The structure of this payload is based on your PDF.
                 // It requires a JSON object with a "text" key.
@@ -359,6 +378,101 @@
                     }
                 });
             };
+        });
+
+        // --- FILE UPLOAD FUNCTIONALITY ---
+        const uploadForm = document.getElementById('upload-form');
+        const fileInput = document.getElementById('file-input');
+        const uploadStatus = document.getElementById('upload-status');
+
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const file = fileInput.files[0];
+            if (!file) {
+                uploadStatus.textContent = "Please select a file first.";
+                uploadStatus.classList.add("text-red-400");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            uploadStatus.textContent = "Uploading...";
+            uploadStatus.classList.remove("text-red-400");
+            uploadStatus.classList.add("text-yellow-400");
+
+            try {
+                // STEP 0: DELETE OLD PROJECT DATA
+                uploadStatus.textContent = "🧹 Deleting old project data...";
+                const deleteRes = await fetch("http://127.0.0.1:8000/api/v1/data/delete/1", {
+                method: "POST",
+                });
+
+                if (!deleteRes.ok) {
+                console.warn("⚠️ Delete API failed or project not found, continuing...");
+                }
+
+                // STEP 1: UPLOAD FILE
+                const response = await fetch("http://127.0.0.1:8000/api/v1/data/upload/1", {
+                    method: "POST",
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errText = await response.text();
+                    throw new Error(`Error: ${response.status} - ${errText}`);
+                }
+
+                const result = await response.json();
+                uploadStatus.textContent = `✅ Uploaded! File ID: ${result.file_id}`;
+                uploadStatus.classList.remove("text-yellow-400");
+                uploadStatus.classList.add("text-green-400");
+
+                // STEP 2: PROCESS FILE
+                uploadStatus.textContent = "⏳ Processing file...";
+                const processRes = await fetch("http://127.0.0.1:8000/api/v1/data/process/1", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        // file_id: result.file_id,   
+                        chunk_size: 1000, 
+                        overlap_size: 20,
+                        do_reset: 1
+                    })
+                });
+
+                if (!processRes.ok) {
+                    const errText = await processRes.text();
+                    throw new Error(`Process Error: ${processRes.status} - ${errText}`);
+                }
+
+                const processResult = await processRes.json();
+                uploadStatus.textContent = `✅ Processed ${processResult.processed_files} file(s) with ${processResult.inserted_chunks} chunks`;
+
+                // STEP 3: PUSH TO VECTOR DB
+                uploadStatus.textContent = "📤 Pushing to Vector DB...";
+                const pushRes = await fetch("http://127.0.0.1:8000/api/v1/nlp/index/push/1", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        do_reset: 1
+                    })
+                });
+
+                if (!pushRes.ok) {
+                    const errText = await pushRes.text();
+                    throw new Error(`Push Error: ${pushRes.status} - ${errText}`);
+                }
+
+                const pushResult = await pushRes.json();
+                uploadStatus.textContent = `✅ Pushed ${pushResult.inserted_items_count} chunks into Vector DB`;
+
+            } catch (error) {
+                console.error("Pipeline failed:", error);
+                uploadStatus.textContent = "❌ Upload/Process/Push failed. Check console.";
+                uploadStatus.classList.remove("text-yellow-400");
+                uploadStatus.classList.add("text-red-400");
+            }
         });
     </script>
 </body>
