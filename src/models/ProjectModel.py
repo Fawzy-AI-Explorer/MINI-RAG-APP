@@ -1,7 +1,7 @@
 from src.models.BaseDataModel import BaseDataModel
 from src.models.db_schemes import Project
 from sqlalchemy.future import select
-from sqlalchemy import func
+from sqlalchemy import func, delete
 
 class ProjectModel(BaseDataModel):
     """
@@ -42,6 +42,7 @@ class ProjectModel(BaseDataModel):
                 session.add(project)
             await session.commit()
             await session.refresh(project)
+            print(f"Created new project with ID: {project.project_id}")
         return project
     
     async def get_project_or_create_one(self, project_id:str):
@@ -60,12 +61,33 @@ class ProjectModel(BaseDataModel):
                 result = await session.execute(query)
                 project = result.scalar_one_or_none()
                 if project is None:
+                    print(f"Project with ID {project_id} not found. Creating a new one.")
                     # Create a new project if not found
                     project_record = Project(
                         project_id=project_id
                     )
                     project = await self.create_project(project=project_record)
                     return project
+                else:
+                    return project
+
+    async def check_project_exist(self, project_id:str):
+        """
+        Retrieve a project by its ID, or create it if it does not exist.
+
+        Args:
+            project_id (str): The ID of the project to retrieve or create.
+
+        Returns:
+            Project: The retrieved or newly created project object.
+        """
+        async with self.db_client() as session:
+            async with session.begin():
+                query = select(Project).where(Project.project_id == project_id)
+                result = await session.execute(query)
+                project = result.scalar_one_or_none()
+                if project is None:
+                    return None
                 else:
                     return project
 
@@ -100,3 +122,11 @@ class ProjectModel(BaseDataModel):
 
                 return projects, total_pages 
 
+    async def delete_project_by_id(self, project_id: str):
+        async with self.db_client() as session:
+            async with session.begin():
+                stmt = delete(Project).where(Project.project_id == project_id)
+                await session.execute(stmt)
+                await session.commit()
+                print(f"Deleted project with ID: {project_id}")
+                return True
