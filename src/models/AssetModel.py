@@ -41,6 +41,7 @@ class AssetModel(BaseDataModel):
                 session.add(asset)
             await session.commit()
             await session.refresh(asset)
+            print(f"Created new asset with ID: {asset.asset_id}")
         return asset
 
     async def get_all_project_assets(self, asset_project_id: str, asset_type: str):
