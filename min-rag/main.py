@@ -104,6 +104,10 @@ app.include_router(nlp_router)
 
 
 
+# # PGvector service
+# docker pull pgvector/pgvector:0.8.0-pg17-trixie
+# docker volume create pgvector_data_rag_project
+# docker run --name pgvector -e POSTGRES_PASSWORD=admin1 -p 5432:5432 -v pgvector_data:/var/lib/postgresql/data -d pgvector/pgvector:0.8.0-pg17-trixie
 
 
 
